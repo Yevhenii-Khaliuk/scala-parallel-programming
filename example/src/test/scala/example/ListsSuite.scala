@@ -1,5 +1,7 @@
 package example
 
+import java.util.NoSuchElementException
+
 /**
  * This class implements a munit test suite for the methods in object
  * `Lists` that need to be implemented as part of this assignment. A test
@@ -8,7 +10,7 @@ package example
  *
  * To run this test suite, start "sbt" then run the "test" command.
  */
-class ListsSuite extends munit.FunSuite:
+class ListsSuite extends munit.FunSuite :
 
   /**
    * Tests are written using the `test("description") { ... }` syntax
@@ -67,23 +69,24 @@ class ListsSuite extends munit.FunSuite:
    * In the following example, we test the fact that the method `intNotZero`
    * throws an `IllegalArgumentException` if its argument is `0`.
    */
-   test("intNotZero throws an exception if its argument is 0") {
-     try
-       intNotZero(0)
-       fail("No exception has been thrown")
-     catch
-       case e: IllegalArgumentException => ()
-   }
+  test("intNotZero throws an exception if its argument is 0") {
+    try
+      intNotZero(0)
+      fail("No exception has been thrown")
+    catch
+      case e: IllegalArgumentException => ()
+  }
 
-   def intNotZero(x: Int): Int =
-     if x == 0 then throw IllegalArgumentException("zero is not allowed")
-     else x
+  def intNotZero(x: Int): Int =
+    if x == 0 then throw IllegalArgumentException("zero is not allowed")
+    else x
 
   /**
    * Now we finally write some tests for the list functions that have to be
    * implemented for this assignment. We fist import all members of the
    * `List` object.
    */
+
   import Lists.*
 
 
@@ -99,14 +102,42 @@ class ListsSuite extends munit.FunSuite:
    * every tested aspect of a method.
    */
   test("sum of a few numbers (10pts)") {
-    assert(sum(List(1,2,0)) == 3)
+    assert(sum(List(1, 2, 0)) == 3)
+  }
+
+  test("sum of an empty list") {
+    assert(sum(Nil) == 0)
+  }
+
+  test("sum of negative numbers") {
+    assert(sum(List(-1, -2, -4)) == -7)
+  }
+
+  test("sum of mixed numbers") {
+    assert(sum(List(7, -5, 0, 3, -1, 8)) == 12)
   }
 
   test("max of a few numbers (10pts)") {
     assert(max(List(3, 7, 2)) == 7)
   }
 
+  test("max of negative numbers") {
+    assert(max(List(-1, -6, -3)) == -1)
+  }
+
+  test("max of mixed numbers") {
+    assert(max(List(7, -5, 0, 3, -1, 8)) == 8)
+  }
+
+  test("max of an empty list") {
+    try
+      max(Nil)
+      fail("test failed")
+    catch
+      case _: NoSuchElementException => ()
+  }
 
 
   import scala.concurrent.duration.*
+
   override val munitTimeout = 1.seconds
