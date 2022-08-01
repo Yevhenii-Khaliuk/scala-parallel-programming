@@ -1,9 +1,9 @@
 package scalashop
 
+import org.scalameter.*
+
 import java.util.concurrent.*
 import scala.util.DynamicVariable
-
-import org.scalameter.*
 
 /** The value of every pixel is represented as a 32 bit integer. */
 type RGBA = Int
@@ -33,19 +33,40 @@ def clamp(v: Int, min: Int, max: Int): Int =
 /** Image is a two-dimensional matrix of pixel values. */
 class Img(val width: Int, val height: Int, private val data: Array[RGBA]):
   def this(w: Int, h: Int) = this(w, h, new Array(w * h))
+
   def apply(x: Int, y: Int): RGBA = data(y * width + x)
+
   def update(x: Int, y: Int, c: RGBA): Unit = data(y * width + x) = c
 
 /** Computes the blurred RGBA value of a single pixel of the input image. */
 def boxBlurKernel(src: Img, x: Int, y: Int, radius: Int): RGBA =
-
-  // TODO implement using while loops
-  ???
+  val minX = clamp(x - radius, 0, src.width - 1)
+  val maxX = clamp(x + radius, 0, src.width - 1)
+  var j = clamp(y - radius, 0, src.height - 1)
+  val maxY = clamp(y + radius, 0, src.height - 1)
+  var redSum = 0
+  var greenSum = 0
+  var blueSum = 0
+  var alphaSum = 0
+  val count = (maxX - minX + 1) * (maxY - j + 1)
+  while (j <= maxY) {
+    var i = minX
+    while (i <= maxX) {
+      redSum += red(src(i, j))
+      greenSum += green(src(i, j))
+      blueSum += blue(src(i, j))
+      alphaSum += alpha(src(i, j))
+      i += 1
+    }
+    j += 1
+  }
+  rgba(redSum / count, greenSum / count, blueSum / count, alphaSum / count)
 
 val forkJoinPool = ForkJoinPool()
 
 abstract class TaskScheduler:
   def schedule[T](body: => T): ForkJoinTask[T]
+
   def parallel[A, B](taskA: => A, taskB: => B): (A, B) =
     val right = task {
       taskB
@@ -53,7 +74,7 @@ abstract class TaskScheduler:
     val left = taskA
     (left, right.join())
 
-class DefaultTaskScheduler extends TaskScheduler:
+class DefaultTaskScheduler extends TaskScheduler :
   def schedule[T](body: => T): ForkJoinTask[T] =
     val t = new RecursiveTask[T] {
       def compute = body
@@ -75,8 +96,14 @@ def parallel[A, B](taskA: => A, taskB: => B): (A, B) =
   scheduler.value.parallel(taskA, taskB)
 
 def parallel[A, B, C, D](taskA: => A, taskB: => B, taskC: => C, taskD: => D): (A, B, C, D) =
-  val ta = task { taskA }
-  val tb = task { taskB }
-  val tc = task { taskC }
+  val ta = task {
+    taskA
+  }
+  val tb = task {
+    taskB
+  }
+  val tc = task {
+    taskC
+  }
   val td = taskD
   (ta.join(), tb.join(), tc.join(), td)
