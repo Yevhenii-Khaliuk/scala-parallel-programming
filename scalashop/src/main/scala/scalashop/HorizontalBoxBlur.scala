@@ -9,7 +9,7 @@ object HorizontalBoxBlurRunner:
     Key.exec.maxWarmupRuns := 10,
     Key.exec.benchRuns := 10,
     Key.verbose := false
-  ) withWarmer(Warmer.Default())
+  ) withWarmer (Warmer.Default())
 
   def main(args: Array[String]): Unit =
     val radius = 3
@@ -30,26 +30,30 @@ object HorizontalBoxBlurRunner:
     println(s"speedup: ${seqtime.value / partime.value}")
 
 /** A simple, trivially parallelizable computation. */
-object HorizontalBoxBlur extends HorizontalBoxBlurInterface:
+object HorizontalBoxBlur extends HorizontalBoxBlurInterface :
 
   /** Blurs the rows of the source image `src` into the destination image `dst`,
-   *  starting with `from` and ending with `end` (non-inclusive).
+   * starting with `from` and ending with `end` (non-inclusive).
    *
-   *  Within each row, `blur` traverses the pixels by going from left to right.
+   * Within each row, `blur` traverses the pixels by going from left to right.
    */
   def blur(src: Img, dst: Img, from: Int, end: Int, radius: Int): Unit =
-  // TODO implement this method using the `boxBlurKernel` method
-
-  ???
+    for (x <- Range(0, src.width)) {
+      for (y <- Range(from, end)) {
+        dst(x, y) = boxBlurKernel(src, x, y, radius)
+      }
+    }
 
   /** Blurs the rows of the source image in parallel using `numTasks` tasks.
    *
-   *  Parallelization is done by stripping the source image `src` into
-   *  `numTasks` separate strips, where each strip is composed of some number of
-   *  rows.
+   * Parallelization is done by stripping the source image `src` into
+   * `numTasks` separate strips, where each strip is composed of some number of
+   * rows.
    */
   def parBlur(src: Img, dst: Img, numTasks: Int, radius: Int): Unit =
-  // TODO implement using the `task` construct and the `blur` method
-
-  ???
-
+    val stopPoints = (0 to src.height by src.width / numTasks).toList
+    (stopPoints zip stopPoints.tail).map { (from, end) =>
+      task {
+        blur(src, dst, from, end, radius)
+      }
+    }.foreach(t => t.join())
