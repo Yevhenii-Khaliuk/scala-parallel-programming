@@ -4,12 +4,13 @@ import java.util.concurrent.*
 import scala.collection.*
 import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory
 
-class ReductionsSuite extends munit.FunSuite:
-  /*****************
+class ReductionsSuite extends munit.FunSuite :
+  /** ***************
    * LINE OF SIGHT *
-   *****************/
+   * *************** */
 
   import LineOfSight.*
+
   test("lineOfSight should correctly handle an array of size 4") {
     val output = new Array[Float](4)
     lineOfSight(Array[Float](0f, 1f, 8f, 9f), output)
@@ -17,16 +18,14 @@ class ReductionsSuite extends munit.FunSuite:
   }
 
 
-
-
-  /*******************************
+  /** *****************************
    * PARALLEL COUNT CHANGE SUITE *
-   *******************************/
+   * ***************************** */
 
   import ParallelCountChange.*
 
   test("countChange should return 0 for money < 0") {
-    def check(money: Int, coins: List[Int]) =
+    def check(money: Int, coins: List[Int]): Unit =
       assert(countChange(money, coins) == 0,
         s"countChang($money, _) should be 0")
 
@@ -37,7 +36,7 @@ class ReductionsSuite extends munit.FunSuite:
   }
 
   test("countChange should return 1 when money == 0") {
-    def check(coins: List[Int]) =
+    def check(coins: List[Int]): Unit =
       assert(countChange(0, coins) == 1,
         s"countChang(0, _) should be 1")
 
@@ -47,7 +46,7 @@ class ReductionsSuite extends munit.FunSuite:
   }
 
   test("countChange should return 0 for money > 0 and coins = List()") {
-    def check(money: Int) =
+    def check(money: Int): Unit =
       assert(countChange(money, List()) == 0,
         s"countChang($money, List()) should be 0")
 
@@ -56,7 +55,7 @@ class ReductionsSuite extends munit.FunSuite:
   }
 
   test("countChange should work when there is only one coin") {
-    def check(money: Int, coins: List[Int], expected: Int) =
+    def check(money: Int, coins: List[Int], expected: Int): Unit =
       assert(countChange(money, coins) == expected,
         s"countChange($money, $coins) should be $expected")
 
@@ -68,7 +67,7 @@ class ReductionsSuite extends munit.FunSuite:
   }
 
   test("countChange should work for multi-coins") {
-    def check(money: Int, coins: List[Int], expected: Int) =
+    def check(money: Int, coins: List[Int], expected: Int): Unit =
       assert(countChange(money, coins) == expected,
         s"countChange($money, $coins) should be $expected")
 
@@ -77,14 +76,14 @@ class ReductionsSuite extends munit.FunSuite:
   }
 
 
-  /**********************************
+  /** ********************************
    * PARALLEL PARENTHESES BALANCING *
-   **********************************/
+   * ******************************** */
 
   import ParallelParenthesesBalancing.*
 
   test("balance should work for empty string") {
-    def check(input: String, expected: Boolean) =
+    def check(input: String, expected: Boolean): Unit =
       assert(balance(input.toArray) == expected,
         s"balance($input) should be $expected")
 
@@ -92,7 +91,7 @@ class ReductionsSuite extends munit.FunSuite:
   }
 
   test("balance should work for string of length 1") {
-    def check(input: String, expected: Boolean) =
+    def check(input: String, expected: Boolean): Unit =
       assert(balance(input.toArray) == expected,
         s"balance($input) should be $expected")
 
@@ -102,7 +101,7 @@ class ReductionsSuite extends munit.FunSuite:
   }
 
   test("balance should work for string of length 2") {
-    def check(input: String, expected: Boolean) =
+    def check(input: String, expected: Boolean): Unit =
       assert(balance(input.toArray) == expected,
         s"balance($input) should be $expected")
 
@@ -116,7 +115,17 @@ class ReductionsSuite extends munit.FunSuite:
     check(").", false)
   }
 
+  test("parBalance() correctness") {
+    def check(input: String, expected: Boolean): Unit =
+      assert(parBalance(input.toArray, 4) == expected,
+        s"parBalance($input) should be $expected")
+
+    check("()())()()()()()()())))()((((((()((()))))()()(", false)
+    check("()()()()()()()()()(())()((((((()((()))))))))", true)
+  }
+
 
   import scala.concurrent.duration.*
+
   override val munitTimeout = 10.seconds
 
