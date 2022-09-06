@@ -8,7 +8,7 @@ import scala.util.Random
 import org.scalameter.*
 import java.util.concurrent.ForkJoinPool
 
-class KMeans extends KMeansInterface:
+class KMeans extends KMeansInterface :
 
   def generatePoints(k: Int, num: Int): ParSeq[Point] =
     val randx = Random(1)
@@ -40,7 +40,8 @@ class KMeans extends KMeansInterface:
     closest
 
   def classify(points: ParSeq[Point], means: ParSeq[Point]): ParMap[Point, ParSeq[Point]] =
-    ???
+    means.map(mean => mean -> ParSeq.empty[Point]).toMap ++
+      points.groupBy(point => findClosest(point, means))
 
   def findAverage(oldMean: Point, points: ParSeq[Point]): Point = if points.isEmpty then oldMean else
     var x = 0.0
@@ -54,24 +55,34 @@ class KMeans extends KMeansInterface:
     Point(x / points.length, y / points.length, z / points.length)
 
   def update(classified: ParMap[Point, ParSeq[Point]], oldMeans: ParSeq[Point]): ParSeq[Point] =
-    ???
+    oldMeans.map(oldMean => findAverage(oldMean, classified(oldMean)))
 
   def converged(eta: Double, oldMeans: ParSeq[Point], newMeans: ParSeq[Point]): Boolean =
-    ???
+    var i = 0
+    while (i < oldMeans.size) {
+      if (oldMeans(i).squareDistance(newMeans(i)) > eta)
+        return false
+      i += 1
+    }
+    true
 
   @tailrec
   final def kMeans(points: ParSeq[Point], means: ParSeq[Point], eta: Double): ParSeq[Point] =
-    if (???) kMeans(???, ???, ???) else ??? // your implementation need to be tail recursive
+    val newMeans = update(classify(points, means), means)
+    if (!converged(eta, means, newMeans)) kMeans(points, newMeans, eta) else newMeans
 
 /** Describes one point in three-dimensional space.
  *
- *  Note: deliberately uses reference equality.
+ * Note: deliberately uses reference equality.
  */
 class Point(val x: Double, val y: Double, val z: Double):
   private def square(v: Double): Double = v * v
+
   def squareDistance(that: Point): Double =
-    square(that.x - x)  + square(that.y - y) + square(that.z - z)
+    square(that.x - x) + square(that.y - y) + square(that.z - z)
+
   private def round(v: Double): Double = (v * 100).toInt / 100.0
+
   override def toString = s"(${round(x)}, ${round(y)}, ${round(z)})"
 
 
@@ -82,7 +93,7 @@ object KMeansRunner:
     Key.exec.maxWarmupRuns := 40,
     Key.exec.benchRuns := 25,
     Key.verbose := false
-  ) withWarmer(Warmer.Default())
+  ) withWarmer (Warmer.Default())
 
   def main(args: Array[String]): Unit =
     val kMeans = KMeans()
